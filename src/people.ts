@@ -121,8 +121,8 @@ function onResizeWindow() {
 }
 
 async function loadBody(loader: GLTFLoader) {
-  const gltf = await loader.loadAsync('models/gltf/body.glb');
-  const body = SkeletonUtils.clone(gltf.scene);
+  const { scene, animations } = await loader.loadAsync('models/gltf/body.glb');
+  const body = SkeletonUtils.clone(scene);
 
   const bodyFixed = body.getObjectByName('body_fixed') as SkinnedMesh;
   const skeleton = bodyFixed.skeleton;
@@ -138,7 +138,7 @@ async function loadBody(loader: GLTFLoader) {
   bodyMesh.name = bodyFixed.name;
   bodyMesh.bind(skeleton);
   bodyMesh.add(rootBone);
-  return { skeleton, bodyMesh, animations: gltf.animations };
+  return { skeleton, bodyMesh, animations };
 }
 
 async function loadHair(loader: GLTFLoader, skeleton: Skeleton) {
@@ -287,7 +287,6 @@ async function loadModel() {
     bottomMesh,
     shoesMesh,
   );
-  group.castShadow = true;
   group.rotateX(Math.PI / 2);
   group.scale.set(0.01, 0.01, 0.01);
   scene.add(group);
