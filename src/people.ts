@@ -5,17 +5,11 @@ import {
   Clock,
   Color,
   DirectionalLight,
-  Fog,
-  GridHelper,
   Group,
-  HemisphereLight,
   Material,
-  Mesh,
-  MeshPhongMaterial,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
-  PlaneGeometry,
   Scene,
   Skeleton,
   SkinnedMesh,
@@ -27,14 +21,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 
-let scene: Scene,
-  camera: PerspectiveCamera,
-  renderer: WebGLRenderer,
-  plane: Mesh;
-let dirLight: DirectionalLight, hemiLight: HemisphereLight;
+let scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer;
+
+let dirLight: DirectionalLight;
 
 let controls: OrbitControls;
-let gridHelper: GridHelper;
 
 const mixers: AnimationMixer[] = [];
 const clock = new Clock();
@@ -50,10 +41,8 @@ type modelObject = Object3D & {
   initCamera();
   initRenderer();
   initLight();
-  initPlane();
   enableShadow();
 
-  initGridHelper();
   initControls();
 })();
 
@@ -64,7 +53,6 @@ window.addEventListener('resize', onResizeWindow);
 function initScene() {
   scene = new Scene();
   scene.background = new Color(0x888888);
-  scene.fog = new Fog(0xa0a0a0, 10, 50);
 }
 
 function initCamera() {
@@ -74,11 +62,11 @@ function initCamera() {
     0.1,
     1000,
   );
-  camera.position.set(5, 5, 10);
+  camera.position.set(10, 10, 15);
 }
 
 function initRenderer() {
-  renderer = new WebGLRenderer();
+  renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputEncoding = sRGBEncoding;
@@ -86,38 +74,39 @@ function initRenderer() {
 }
 
 function initLight() {
-  hemiLight = new HemisphereLight(0xa0a0a0, 0x888888);
   dirLight = new DirectionalLight();
-  dirLight.position.set(5, 5, 5);
-  scene.add(hemiLight, dirLight);
-}
+  dirLight.position.set(10, 10, 20);
 
-function initPlane() {
-  plane = new Mesh(new PlaneGeometry(100, 100), new MeshPhongMaterial());
-  plane.rotation.x = -Math.PI / 2;
-  scene.add(plane);
+  const leftLight = new DirectionalLight();
+  leftLight.position.set(-10, 10, 0);
+
+  scene.add(dirLight, leftLight);
 }
 
 function enableShadow() {
   renderer.shadowMap.enabled = true;
-  plane.receiveShadow = true;
   dirLight.castShadow = true;
-}
-
-function initGridHelper() {
-  gridHelper = new GridHelper(100, 100, 0xff0000);
-  scene.add(gridHelper);
 }
 
 function initControls() {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
+  controls.enableRotate = false;
 }
 
 function onResizeWindow() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+async function loadRoom(loader: GLTFLoader) {
+  const gltf = await loader.loadAsync('models/gltf/room.glb');
+  const room = SkeletonUtils.clone(gltf.scene);
+  console.log('room', gltf);
+  room.castShadow = true;
+  room.rotateY(-0.5);
+  scene.add(room);
 }
 
 async function loadBody(loader: GLTFLoader) {
@@ -267,6 +256,8 @@ async function loadModel() {
   dracoLoader.setDecoderPath('/js/libs/draco/gltf/');
   loader.setDRACOLoader(dracoLoader);
 
+  loadRoom(loader);
+
   const { skeleton, bodyMesh, animations } = await loadBody(loader);
   const hairMesh = await loadHair(loader, skeleton);
   const eyesMesh = await loadEyes(loader, skeleton);
@@ -298,7 +289,7 @@ async function loadModel() {
     const action = mixer.clipAction(clip);
     actions.push(action);
   });
-  actions[1].play();
+  actions[6].play();
 
   animate();
 }
