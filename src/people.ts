@@ -56,12 +56,7 @@ function initScene() {
 }
 
 function initCamera() {
-  camera = new PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
+  camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(10, 10, 15);
 }
 
@@ -130,8 +125,8 @@ async function loadBody(loader: GLTFLoader) {
   return { skeleton, bodyMesh, animations };
 }
 
-async function loadHair(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/hair/hair02.glb');
+async function loadOther(loader: GLTFLoader, skeleton: Skeleton, name: string, url: string) {
+  const gltf = await loader.loadAsync(url);
   const skinnedMeshs: SkinnedMesh[] = [];
   gltf.scene.traverse((child: modelObject) => {
     if (child.isSkinnedMesh) {
@@ -143,109 +138,7 @@ async function loadHair(loader: GLTFLoader, skeleton: Skeleton) {
     }
   });
   const group = new Group();
-  group.name = 'hair';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadEyes(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/eyes/eyes02.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'eyes';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadEyebrow(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/eyebrow/eyebrow01.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'eyebrow';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadMouth(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/mouth/mouth01.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child?.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'mouth';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadTop(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/top/top02.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'top';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadBottom(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/bottom/bottom02.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'bottom';
-  group.add(...skinnedMeshs);
-  return group;
-}
-
-async function loadShoes(loader: GLTFLoader, skeleton: Skeleton) {
-  const gltf = await loader.loadAsync('models/gltf/shoes/shoes01.glb');
-  const skinnedMeshs: SkinnedMesh[] = [];
-  gltf.scene.traverse((child: modelObject) => {
-    if (child?.isSkinnedMesh) {
-      const skinnedMesh = new SkinnedMesh(child.geometry, child.material);
-      skinnedMesh.bind(skeleton);
-      skinnedMesh.name = child.name;
-      skinnedMeshs.push(skinnedMesh);
-    }
-  });
-  const group = new Group();
-  group.name = 'shoes';
+  group.name = name;
   group.add(...skinnedMeshs);
   return group;
 }
@@ -259,25 +152,15 @@ async function loadModel() {
   loadRoom(loader);
 
   const { skeleton, bodyMesh, animations } = await loadBody(loader);
-  const hairMesh = await loadHair(loader, skeleton);
-  const eyesMesh = await loadEyes(loader, skeleton);
-  const eyebrowMesh = await loadEyebrow(loader, skeleton);
-  const mouthMesh = await loadMouth(loader, skeleton);
-  const topMesh = await loadTop(loader, skeleton);
-  const bottomMesh = await loadBottom(loader, skeleton);
-  const shoesMesh = await loadShoes(loader, skeleton);
-
+  const hair = await loadOther(loader, skeleton, 'hair', 'models/gltf/hair/hair02.glb');
+  const eyes = await loadOther(loader, skeleton, 'eyes', 'models/gltf/eyes/eyes02.glb');
+  const eyebrow = await loadOther(loader, skeleton, 'eyebrow', 'models/gltf/eyebrow/eyebrow01.glb');
+  const mouth = await loadOther(loader, skeleton, 'mouth', 'models/gltf/mouth/mouth01.glb');
+  const top = await loadOther(loader, skeleton, 'top', 'models/gltf/top/top02.glb');
+  const bottom = await loadOther(loader, skeleton, 'bottom', 'models/gltf/bottom/bottom02.glb');
+  const shoes = await loadOther(loader, skeleton, 'shoes', 'models/gltf/shoes/shoes01.glb');
   const group = new Group();
-  group.add(
-    bodyMesh,
-    hairMesh,
-    eyesMesh,
-    eyebrowMesh,
-    mouthMesh,
-    topMesh,
-    bottomMesh,
-    shoesMesh,
-  );
+  group.add(bodyMesh, hair, eyes, eyebrow, mouth, top, bottom, shoes);
   group.rotateX(Math.PI / 2);
   group.scale.set(0.01, 0.01, 0.01);
   scene.add(group);
